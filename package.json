@@ -1,0 +1,24 @@
+{
+  "name": "omega-topology-mitab-socket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^12.0.7",
+    "abort-controller": "^3.0.0",
+    "express": "^4.17.0",
+    "node-fetch": "^2.6.0",
+    "socket.io": "^2.2.0",
+    "timerize": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.16.1",
+    "@types/socket.io": "^2.1.2"
+  }
+}
