@@ -1,13 +1,19 @@
 import OmegaTopologySocket from './OmegaTopologySocket';
 import AbortController from 'abort-controller';
+import commander from 'commander';
+
+commander
+    .option('-u, --url <databaseUrl>', 'Database URL', 'http://localhost:3280')
+    .option('-p, --port <port>', 'Port', parseInt, 3456)
+.parse(process.argv)
 
 if (typeof window === "undefined" || !window.fetch) {
     var fetch = require("node-fetch") as GlobalFetch["fetch"];
 }
 
-const URL = "http://localhost:3280/bulk_couple";
+const URL = commander.url + "/bulk_couple";
 
-const bulk_get = async function* (specie: string, ids: [string, string][], packet_len = 128) {
+const bulk_get = async function* (ids: [string, string][], packet_len = 128) {
     let cache = [];
 
     const controller = new AbortController();
@@ -62,12 +68,12 @@ const bulk_get = async function* (specie: string, ids: [string, string][], packe
     }
 };
 
-new OmegaTopologySocket(3456, socket => {
+new OmegaTopologySocket(commander.port, socket => {
     console.log(`Connected client on port 3456.`);
 
     socket.on('getlines', async (specie: string, full_ids: [string, string][]) => {
         // Get lines from pairs
-        for await (const ids of bulk_get(specie, full_ids)) {
+        for await (const ids of bulk_get(full_ids)) {
             socket.emit(specie, Object.values(ids) as string[][]);
         }
 
