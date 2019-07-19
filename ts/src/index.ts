@@ -1,28 +1,35 @@
 import OmegaTopologySocket from './OmegaTopologySocket';
 import AbortController from 'abort-controller';
 import commander from 'commander';
+import logger from './logger';
 
 commander
     .option('-u, --url <databaseUrl>', 'Database URL', 'http://localhost:3280')
     .option('-p, --port <port>', 'Port', parseInt, 3456)
+    .option('-l, --logLevel [logLevel]', 'Log level [debug|verbose|info|warn|error]', /^(debug|verbose|info|warn|error)$/, 'warn')
 .parse(process.argv)
+
+logger.level = commander.logLevel;
 
 if (typeof window === "undefined" || !window.fetch) {
     var fetch = require("node-fetch") as GlobalFetch["fetch"];
 }
 
 const URL = commander.url + "/bulk_couple";
+logger.info(`Will fetch MI Tab data from ${URL}`);
 
 const bulk_get = async function* (ids: [string, string][], packet_len = 128) {
     let cache = [];
 
     const controller = new AbortController();
     const timeout = setTimeout(
-        () => { controller.abort(); console.log("Timeout !"); },
+        () => { controller.abort(); logger.info("Timeout !"); },
         10000 /* 10 secondes */
     );
 
     const do_request = async () => {
+        logger.debug(`Fetching ${cache.length} couples from Couch`);
+
         // On les récupère
         const partners = await fetch(URL, {
             method: "POST",
@@ -46,7 +53,7 @@ const bulk_get = async function* (ids: [string, string][], packet_len = 128) {
             try {
                 yield await do_request();
             } catch (e) {
-                console.error(e);
+                logger.error(e);
             }
             
             // On vide le cache
@@ -63,15 +70,17 @@ const bulk_get = async function* (ids: [string, string][], packet_len = 128) {
         try {
             yield await do_request();
         } catch (e) {
-            console.error(e);
+            logger.error(e);
         }
     }
 };
 
 new OmegaTopologySocket(commander.port, socket => {
-    console.log(`Connected client on port 3456.`);
+    logger.info(`Connected client ${socket.id} on port 3456.`);
 
     socket.on('getlines', async (specie: string, full_ids: [string, string][]) => {
+        logger.debug(`Requested ${full_ids.length} couples from client ${socket.id}`);
+
         // Get lines from pairs
         for await (const ids of bulk_get(full_ids)) {
             socket.emit(specie, Object.values(ids) as string[][]);
@@ -81,7 +90,7 @@ new OmegaTopologySocket(commander.port, socket => {
     });
 
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        logger.info('Client disconnected');
     });
 });
 
