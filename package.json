@@ -14,7 +14,7 @@
     "abort-controller": "^3.0.0",
     "commander": "^2.20.0",
     "express": "^4.17.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "socket.io": "^2.2.0",
     "timerize": "^1.0.1",
     "winston": "^3.2.1"
